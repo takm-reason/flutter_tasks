@@ -10,10 +10,13 @@ class TaskNotifier extends AsyncNotifier<TaskListState> {
 
   @override
   Future<TaskListState> build() async {
-    // リポジトリの初期化を待機
-    _repository = await ref.watch(taskRepositoryProvider.future);
-    final tasks = await _repository.findAll();
-    return TaskListState(tasks: tasks);
+    _repository = ref.watch(taskRepositoryProvider);
+    try {
+      final tasks = await _repository.findAll();
+      return TaskListState(tasks: tasks);
+    } catch (e) {
+      throw Exception('タスクの読み込みに失敗しました: $e');
+    }
   }
 
   /// タスク一覧を読み込む
@@ -37,35 +40,69 @@ class TaskNotifier extends AsyncNotifier<TaskListState> {
         ),
       );
     } catch (e) {
-      state = AsyncError(e, StackTrace.current);
+      state = AsyncError('タスクの読み込みに失敗しました: $e', StackTrace.current);
     }
   }
 
   /// タスクを作成する
   Future<void> createTask(Task task) async {
-    await _repository.save(task);
-    loadTasks();
+    state = const AsyncValue.loading();
+    try {
+      await _repository.save(task);
+      loadTasks();
+    } catch (e) {
+      state = AsyncError('タスクの作成に失敗しました: $e', StackTrace.current);
+    }
   }
 
   /// タスクを更新する
   Future<void> updateTask(Task task) async {
-    await _repository.save(task);
-    loadTasks();
+    state = const AsyncValue.loading();
+    try {
+      // タスクの存在確認を行う
+      final existingTask = await _repository.findById(task.id);
+      if (existingTask == null) {
+        state = AsyncError('タスクが見つかりませんでした', StackTrace.current);
+        return;
+      }
+      await _repository.save(task);
+      loadTasks();
+    } catch (e) {
+      state = AsyncError('タスクの更新に失敗しました: $e', StackTrace.current);
+    }
   }
 
   /// タスクを削除する
   Future<void> deleteTask(String id) async {
-    await _repository.delete(id);
-    loadTasks();
+    state = const AsyncValue.loading();
+    try {
+      await _repository.delete(id);
+      loadTasks();
+    } catch (e) {
+      state = AsyncError('タスクの削除に失敗しました: $e', StackTrace.current);
+    }
   }
 
   /// タスクの完了状態を切り替える
   Future<void> toggleTaskCompletion(String id) async {
-    final task = await _repository.findById(id);
-    if (task != null) {
-      final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
-      await _repository.save(updatedTask);
-      loadTasks();
+    state = const AsyncValue.loading();
+    try {
+      final task = await _repository.findById(id);
+      if (task == null) {
+        state = AsyncError('タスクが見つかりません: $id', StackTrace.current);
+        return;
+      }
+
+      if (task.isCompleted) {
+        await _repository.uncomplete(id);
+      } else {
+        await _repository.complete(id);
+      }
+
+      // 最新のタスク一覧を読み込む
+      await loadTasks();
+    } catch (e) {
+      state = AsyncError('タスクの完了状態の更新に失敗しました: $e', StackTrace.current);
     }
   }
 

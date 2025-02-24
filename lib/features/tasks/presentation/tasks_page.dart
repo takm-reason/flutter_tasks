@@ -103,7 +103,7 @@ class _TaskListItem extends ConsumerWidget {
               const SizedBox(width: 8),
               if (task.dueDate != null)
                 Text(
-                  DateFormat.yMMMd().format(task.dueDate!),
+                  DateFormat.yMMMd('ja_JP').format(task.dueDate!),
                   style: textTheme.bodySmall?.copyWith(
                     color: isOverdue ? colorScheme.error : null,
                   ),
