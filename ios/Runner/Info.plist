@@ -40,10 +40,23 @@
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
+	<string>UIInterfaceOrientationPortrait</string>
+	<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	<string>UIInterfaceOrientationLandscapeLeft</string>
+	<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-</dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+	    <key>NSExceptionDomains</key>
+	    <dict>
+	        <key>192.168.11.4</key>
+	        <dict>
+	            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+	            <true/>
+	            <key>NSIncludesSubdomains</key>
+	            <true/>
+	        </dict>
+	    </dict>
+	</dict>
+	</dict>
 </plist>
